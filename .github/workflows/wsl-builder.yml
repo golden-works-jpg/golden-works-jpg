@@ -1,0 +1,35 @@
+name: Build Debian 13 WSL Image
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch: # Allows you to run this manually from the GitHub Actions tab
+
+jobs:
+  build-wsl:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build Docker Image
+      run: |
+        docker build -t debian13-wsl .
+
+    - name: Create Container and Export TAR
+      run: |
+        docker create --name temp-debian debian13-wsl
+        docker export temp-debian > debian13-wsl.tar
+        docker rm temp-debian
+
+    - name: Upload WSL Tarball Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: debian13-wsl-tarball
+        path: debian13-wsl.tar
+        retention-days: 7
+
